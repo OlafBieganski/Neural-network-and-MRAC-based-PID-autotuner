@@ -90,6 +90,5 @@ for y in time:
     dYdU.append(tanks_sys.get_dY_dU(1, 0.01))
 
 plt.plot(time, system_out)
-#plt.show()
 plt.plot(time, dYdU)
 plt.show()
