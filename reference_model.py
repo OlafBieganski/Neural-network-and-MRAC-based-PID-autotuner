@@ -1,15 +1,15 @@
 class ReferenceModel:
     def __init__(self, natural_freq=0.03, damping=0.7) -> None:
         self.omega = natural_freq
-        self.eta = damping
+        self.ksi = damping
         self.prev_y = 0
         self.prev_prev_y = 0
 
     def system_output(self, input, time_step):
         # Obliczanie aktualnej wartości wyjścia systemu
-        y = (input + (2/(self.omega**2 * time_step**2) + (2*self.eta)/(self.omega*time_step))*self.prev_y - 
+        y = (input + (2/(self.omega**2 * time_step**2) + (2*self.ksi)/(self.omega*time_step))*self.prev_y - 
              (1/(self.omega**2 * time_step**2))*self.prev_prev_y) / (1 + 1/(self.omega**2 * time_step**2) + 
-             (2*self.eta)/(self.omega*time_step))
+             (2*self.ksi)/(self.omega*time_step))
         
         # Aktualizacja poprzednich wartości wyjścia
         self.prev_prev_y = self.prev_y
