@@ -7,9 +7,18 @@ class ReferenceModel:
 
     def system_output(self, input, time_step):
         # Obliczanie aktualnej wartości wyjścia systemu
-        y = (input + (2/(self.omega**2 * time_step**2) + (2*self.ksi)/(self.omega*time_step))*self.prev_y - 
-             (1/(self.omega**2 * time_step**2))*self.prev_prev_y) / (1 + 1/(self.omega**2 * time_step**2) + 
-             (2*self.ksi)/(self.omega*time_step))
+        T = time_step
+        omega_n = self.omega
+        ksi = self.ksi
+
+        # Współczynniki równania różnicowego
+        a0 = 1 + 2 * ksi * omega_n * T + (omega_n * T) ** 2
+        a1 = 2 * (1 + ksi * omega_n * T)
+        a2 = -1
+        b0 = (omega_n * T)**2
+
+        # Obliczanie aktualnej wartości wyjścia systemu
+        y = (b0 * input + a1 * self.prev_y + a2 * self.prev_prev_y) / a0
         
         # Aktualizacja poprzednich wartości wyjścia
         self.prev_prev_y = self.prev_y
