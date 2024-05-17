@@ -2,35 +2,32 @@ import control as ct
 import numpy as np
 import matplotlib.pyplot as plt
 
-SAMPLE_AMT = 3000
+SAMPLE_AMT = 20000
 
 class ReferenceModel:
-    def __init__(self, natural_freq=0.02, damping=0.7) -> None:
-        self.natural_freq = natural_freq
-        self.damping = damping
-        # Reference model transfer function numerator coefficients
-        self.num = [natural_freq**2]
-        # Reference model transfer function denominator coefficients
-        self.den = [1, 2*damping*natural_freq, natural_freq**2]
-        # Model transfer function
-        self.G_m = ct.tf(self.num, self.den)
+    def __init__(self, natural_freq=0.03, damping=0.7) -> None:
+        self.omega = natural_freq
+        self.eta = damping
+        self.prev_y = 0
+        self.prev_prev_y = 0
 
-    def system_output(self, input):
-        # Simulate one time step for the system and obtain the output
-        t, y = ct.forced_response(self.G_m, T=np.array([0, 1]), U=np.array([0, input]))
-        # Return the output at the end of the time step
-        return y[-1]
+    def system_output(self, input, time_step):
+        y = 1/(1 + 1/(self.omega**2 * time_step**2) + (2*self.eta)/(self.omega*time_step)) * (input + (2/(self.omega**2 * time_step**2) + (2*self.eta)/(self.omega*time_step))*self.prev_y - 1/(self.omega**2 * time_step**2)*self.prev_prev_y)
+        self.prev_y = y
+        self.prev_prev_y = self.prev_y
+        return y
+        
 
         
 model = ReferenceModel()
-time = list(range(3000))
+time = list(range(SAMPLE_AMT))
 y = list()
 u = 10
-u_arr = [u] * 3000
+u_arr = [u] * SAMPLE_AMT
 plt.plot(time, u_arr)
 for t in time:
-    if t == 1500: u = 35
-    y.append(model.system_output(u))
+    if t == 6000: u = 35
+    y.append(model.system_output(u, 1))
 
 plt.plot(time, y)
 plt.show()
