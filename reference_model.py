@@ -26,24 +26,26 @@ class ReferenceModel:
         
         return y
 
-# Tworzenie instancji modelu referencyjnego
-model = ReferenceModel() # natural_freq=1, damping=0.7
+if __name__ == "__main__":
+    
+    # Tworzenie instancji modelu referencyjnego
+    model = ReferenceModel() # natural_freq=1, damping=0.7
 
-# Symulacja odpowiedzi systemu na przykładowe dane wejściowe
-time_step = 0.1
-input_signal = [1] * 5000  # Stałe wejście o wartości 1 przez 5000 kroków czasowych
-output_signal = []
+    # Symulacja odpowiedzi systemu na przykładowe dane wejściowe
+    time_step = 0.1
+    input_signal = [20] * 5000  # Stałe wejście o wartości 1 przez 5000 kroków czasowych
+    output_signal = []
 
-for input in input_signal:
-    output = model.system_output(input, time_step)
-    output_signal.append(output)
+    for input in input_signal:
+        output = model.system_output(input, time_step)
+        output_signal.append(output)
 
-# Wyświetlanie wyników
-import matplotlib.pyplot as plt
+    # Wyświetlanie wyników
+    import matplotlib.pyplot as plt
 
-plt.plot(output_signal)
-plt.xlabel('Kroki czasowe')
-plt.ylabel('Odpowiedź systemu')
-plt.title('Odpowiedź systemu na stałe wejście')
-plt.grid(True)
-plt.show()
+    plt.plot(output_signal)
+    plt.xlabel('Kroki czasowe')
+    plt.ylabel('Odpowiedź systemu')
+    plt.title('Odpowiedź systemu na stałe wejście')
+    plt.grid(True)
+    plt.show()
