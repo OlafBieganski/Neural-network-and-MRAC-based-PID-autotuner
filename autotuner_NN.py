@@ -6,7 +6,8 @@ def sigmoid(x):
 
 # and its derivative -> f'()
 def sigmoid_derivative(x):
-    return sigmoid(x) * (1 - sigmoid(x))
+    sig = sigmoid(x)
+    return sig * (1 - sig)
 
 # just for clarification that it's not a mistake
 def linear(x):
@@ -22,16 +23,16 @@ class NNPIDAutotuner:
         self.momentumB = momentumB
         self.learning_rate = learning_rate
         # Initialize weights and biases
-        self.W_input_hidden = np.random.rand(6, 6)
-        self.W_hidden_output = np.random.rand(3, 6)
-        self.bias_hidden = np.random.rand(6)
-        self.bias_output = np.random.rand(3)
+        self.W_input_hidden = np.random.randn(self.hidden_size, self.input_size) * np.sqrt(1. / self.input_size)
+        self.W_hidden_output = np.random.randn(self.output_size, self.hidden_size) * np.sqrt(1. / self.hidden_size)
+        self.bias_hidden = np.zeros(self.hidden_size)
+        self.bias_output = np.zeros(self.output_size)
         # for hidden layer
-        self.prev_deltaW1 = np.zeros((6, 6))
-        self.prevPrev_deltaW1 = np.zeros((6, 6))
+        self.prev_deltaW1 = np.zeros((self.hidden_size, self.input_size))
+        self.prevPrev_deltaW1 = np.zeros((self.hidden_size, self.input_size))
         # for output layer
-        self.prev_deltaW2 = np.zeros((3, 6))
-        self.prevPrev_deltaW2 = np.zeros((3, 6))
+        self.prev_deltaW2 = np.zeros((self.output_size, self.hidden_size))
+        self.prevPrev_deltaW2 = np.zeros((self.output_size, self.hidden_size))
 
     
     def predict(self, X):
@@ -71,9 +72,9 @@ class NNPIDAutotuner:
         '''
 
         ''' Backpropagation - online'''
-        delta_W2 = np.zeros((3, 6)) # matrix with deltas for each weight
-        du_dok = np.array([E[0]-E[1], E[0], E[0]-2*E[1]-E[2]]) # look equation (14)
-        gradient_k = [0, 0, 0]
+        delta_W2 = np.zeros((self.output_size, self.hidden_size)) # matrix with deltas for each weight
+        du_dok = np.array([E[0]-E[1], E[0], E[0]-2*E[1]+E[2]]) # look equation (14)
+        gradient_k = np.zeros(3)
         # iterate over each element in output weights array (W_kj)
         for k in range(delta_W2.shape[0]):
             gradient_k[k] = e * dY_du * du_dok[k]
@@ -84,11 +85,13 @@ class NNPIDAutotuner:
         # update prev deltas for W2
         self.prevPrev_deltaW2 = self.prev_deltaW2
         self.prev_deltaW2 = delta_W2
+        # update biases for output layer
+        self.bias_output += self.learning_rate * gradient_k
         # backpropagate weight updates from weight matrix to hidden layer
         self.W_hidden_output += delta_W2
         
         # iterate over each element in hidden weights array
-        delta_W1 = np.zeros((6, 6))
+        delta_W1 = np.zeros((self.hidden_size, self.input_size))
         for j in range(delta_W1.shape[0]):
             gradient_j = sigmoid_derivative(self.hidden_input[j]) * sum(gradient_k[k] * self.W_hidden_output[k][j] for k in range(0, 3))
             for i in range(delta_W1.shape[1]):
@@ -98,6 +101,7 @@ class NNPIDAutotuner:
         # update prev deltas for W1
         self.prevPrev_deltaW1 = self.prev_deltaW1
         self.prev_deltaW1 = delta_W1
+        # update biases for hidden layer
+        self.bias_hidden += self.learning_rate * gradient_j
         # update weight matrix for hidden layer
         self.W_input_hidden += delta_W1
-

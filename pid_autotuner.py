@@ -35,8 +35,8 @@ AUTOTUNING_ON = True
 
 # init objects
 tanksSys = TwoTankProcess() # default data from the article
-pid = PIDController(Kp=0.1,Ki=0.01,Kd=1) #random settings,  data from the article Kp=4.95,Ki=0.01,Kd=10.02
-tunerNN = NNPIDAutotuner(2*10**(-7), 10**(-7), 0.0001) # data from paper
+pid = PIDController(Kp=4.90,Ki=0.03,Kd=10.0) #random settings,  data from the article Kp=4.95,Ki=0.01,Kd=10.02
+tunerNN = NNPIDAutotuner(0.9, 0.6, 0.3) # data from paper
 refModel = ReferenceModel()
 
 # data samples arrays
