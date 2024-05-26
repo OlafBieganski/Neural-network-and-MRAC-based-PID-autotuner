@@ -50,7 +50,8 @@ class NNPIDAutotuner:
 
         ''' Feedforward '''
         # create vector out of the input data from the system (6x1)
-        # calculate input for hidden layer (6x1 vector) W*X = h_in 
+        # calculate input for hidden layer (6x1 vector) W*X = h_in
+        self.inputVect = X
         self.hidden_input = np.dot(self.W_input_hidden, X) + self.bias_hidden
         self.hidden_output = sigmoid(self.hidden_input)
         # final/output layer calculations
@@ -59,38 +60,39 @@ class NNPIDAutotuner:
 
         return delta_Kp, delta_Ki, delta_Kd
 
-    def train(self, E, dY_du):
+    def train(self, dY_du, E, e):
         '''
         This function trains NN online
 
         Args:
             dY_du: plant Jacobian at moment 'n+1'
             E: vector with system error at time accrodingly n, n-1, n-2 (y - y_m, diffrence between system output and reference model output)
-
+            e: e(n+1) (model error at n+1)
         '''
 
         ''' Backpropagation - online'''
         delta_W2 = np.zeros((3, 6)) # matrix with deltas for each weight
         du_dok = np.array([E[0]-E[1], E[0], E[0]-2*E[1]-E[2]]) # look equation (14)
+        gradient_k = [0, 0, 0]
         # iterate over each element in output weights array (W_kj)
         for k in range(delta_W2.shape[0]):
-            gradient_k = 0
+            gradient_k[k] = e * dY_du * du_dok[k]
             for j in range(delta_W2.shape[1]):
-                delta_W2[j][i] = (self.learning_rate * gradient_k * self.hidden_output[j] +
+                delta_W2[k][j] = (self.learning_rate * gradient_k[k] * self.hidden_output[j] +
                                   self.momentumA * self.prev_deltaW2[k][j] + 
                                   self.momentumB * self.prevPrev_deltaW2[k][j])
         # update prev deltas for W2
         self.prevPrev_deltaW2 = self.prev_deltaW2
         self.prev_deltaW2 = delta_W2
-        # update weight matrix for hidden layer
+        # backpropagate weight updates from weight matrix to hidden layer
         self.W_hidden_output += delta_W2
         
         # iterate over each element in hidden weights array
         delta_W1 = np.zeros((6, 6))
         for j in range(delta_W1.shape[0]):
-            gradient_j = self.gradient_j(j)
+            gradient_j = sigmoid_derivative(self.hidden_input[j]) * sum(gradient_k[k] * self.W_hidden_output[k][j] for k in range(0, 3))
             for i in range(delta_W1.shape[1]):
-                delta_W1[j][i] = (self.learning_rate * gradient_j * self.hidden_input[i] +
+                delta_W1[j][i] = (self.learning_rate * gradient_j * self.inputVect[i] +
                                   self.momentumA * self.prev_deltaW1[j][i] + 
                                   self.momentumB * self.prevPrev_deltaW1[j][i])
         # update prev deltas for W1
@@ -98,7 +100,4 @@ class NNPIDAutotuner:
         self.prev_deltaW1 = delta_W1
         # update weight matrix for hidden layer
         self.W_input_hidden += delta_W1
-
-    def costFunc(e):
-        return 0.5*e**2
 
