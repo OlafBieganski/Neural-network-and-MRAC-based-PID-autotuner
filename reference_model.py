@@ -1,5 +1,5 @@
 class ReferenceModel:
-    def __init__(self, natural_freq=0.03, damping=0.7) -> None:
+    def __init__(self, natural_freq=0.02, damping=0.7) -> None:
         self.omega = natural_freq
         self.ksi = damping
         self.prev_y = 0
